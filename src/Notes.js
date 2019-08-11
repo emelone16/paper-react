@@ -10,6 +10,27 @@ export class NotesModel {
   }
 }
 
+export const noteActions = {
+  SET_POSITION: "NOTE/SET_POSITION",
+  SET_TETHERED: "NOTE/SET_TETHERED"
+}
+
+export const noteActionCreators = {
+  setPosition: (x, y) => {
+    return {
+      type: noteActions.SET_POSITION,
+      x,
+      y
+    }
+  },
+  setTethered: tethered => {
+    return {
+      type: noteActions.SET_TETHERED,
+      tethered
+    }
+  }
+}
+
 export default class Notes extends Component {
   setupActions = () => {
     const {
@@ -28,7 +49,7 @@ export default class Notes extends Component {
         setNotesPosition(snapPoint.x, snapPoint.y)
       }
 
-      if (notesModel.tethered == false) {
+      if (!notesModel.tethered) {
         setNotesPosition(
           this.text.point.x + event.delta.x,
           this.text.point.y + event.delta.y

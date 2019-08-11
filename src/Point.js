@@ -1,5 +1,4 @@
 import React, { Component } from "react"
-import { connect } from "react-redux"
 import paper from "paper"
 
 import { ColorModel } from "./Color"
@@ -27,9 +26,7 @@ export class PointModel {
 }
 
 export const pointActions = {
-  SET_POSITION: "POINT/SET_POSITION",
-  SET_NOTES_POSITION: "POINT/SET_NOTES_POSITION",
-  SET_NOTES_TETHERED: "POINT/SET_NOTES_TETHERED"
+  SET_POSITION: "POINT/SET_POSITION"
 }
 
 export const pointActionCreators = {
@@ -39,25 +36,12 @@ export const pointActionCreators = {
       x,
       y
     }
-  },
-  setNotesPosition: (x, y) => {
-    return {
-      type: pointActions.SET_NOTES_POSITION,
-      x,
-      y
-    }
-  },
-  setNotesTethered: tethered => {
-    return {
-      type: pointActions.SET_NOTES_TETHERED,
-      tethered
-    }
   }
 }
 
 class Point extends Component {
   setupOuterPoint = () => {
-    let { pointModel } = this.props
+    let { pointModel, selected } = this.props
     let point = new paper.Point(pointModel.x, pointModel.y)
 
     this.outer = new paper.Path.Circle(
@@ -66,7 +50,9 @@ class Point extends Component {
     )
 
     this.outer.strokeColor = pointModel.color.base
-    this.outer.fillColor = pointModel.color.unselected
+    this.outer.fillColor = selected
+      ? pointModel.color.selected
+      : pointModel.color.unselected
     this.outer.strokeWidth = PointModel.STROKE_WIDTH / paper.view.zoom
   }
 
@@ -82,7 +68,14 @@ class Point extends Component {
   }
 
   setupActions = () => {
-    const { pointModel, setPosition, setNotesPosition } = this.props
+    const {
+      pointModel,
+      setPosition,
+      setNotesPosition,
+      setSelected
+    } = this.props
+
+    this.outer.onMouseDown = _ => setSelected()
 
     this.outer.onMouseDrag = event => {
       setPosition(
@@ -101,6 +94,7 @@ class Point extends Component {
     }
 
     this.inner.onMouseDrag = this.outer.onMouseDrag
+    this.inner.onMouseDown = this.outer.onMouseDown
   }
 
   componentDidMount = () => {
@@ -110,9 +104,13 @@ class Point extends Component {
   }
 
   componentDidUpdate = () => {
-    const { pointModel } = this.props
+    const { pointModel, selected } = this.props
     let point = new paper.Point(pointModel.x, pointModel.y)
     this.outer.position = point
+    this.outer.fillColor = selected
+      ? pointModel.color.selected
+      : pointModel.color.unselected
+
     this.inner.position = point
   }
 
