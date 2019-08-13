@@ -23,8 +23,7 @@ const bindToItemType = (state, type) => {
           return { ...state, points: items }
         }
       ]
-    case "RULER-1":
-    case "RULER-2":
+    case "RULER":
       return [
         [...state.rulers],
         items => {
@@ -41,14 +40,8 @@ const notesReducer = (state, action) => {
 
   switch (action.type) {
     case noteActions.SET_POSITION:
-      if (action.parentType === "RULER-1") {
-        items[action.index].notes1.position = {
-          x: action.x,
-          y: action.y
-        }
-        break
-      } else if (action.parentType === "RULER-2") {
-        items[action.index].notes2.position = {
+      if (action.parentType === "RULER") {
+        items[action.index].notes[action.rulerIndex].position = {
           x: action.x,
           y: action.y
         }
@@ -58,11 +51,8 @@ const notesReducer = (state, action) => {
       items[action.index].notes.position = { x: action.x, y: action.y }
       break
     case noteActions.SET_TETHERED:
-      if (action.parentType === "RULER-1") {
-        items[action.index].notes1.tethered = action.tethered
-        break
-      } else if (action.parentType === "RULER-2") {
-        items[action.index].notes2.tethered = action.tethered
+      if (action.parentType === "RULER") {
+        items[action.index].notes[action.rulerIndex].tethered = action.tethered
         break
       }
       
@@ -84,13 +74,9 @@ const reducer = (state = INITIAL_STATE, action) => {
       points[action.index].x = action.x
       points[action.index].y = action.y
       return { ...state, points }
-    case rulerActions.SET_POSITION_1:
+    case rulerActions.SET_POSITION:
       var rulers = [...state.rulers]
-      rulers[action.index].position1 = { x: action.x, y: action.y }
-      return { ...state, rulers}
-    case rulerActions.SET_POSITION_2:
-      var rulers = [...state.rulers]
-      rulers[action.index].position2 = { x: action.x, y: action.y }
+      rulers[action.index].position[action.rulerIndex] = { x: action.x, y: action.y }
       return { ...state, rulers}
     case "ADD_POINT":
       points = [...state.points]
@@ -98,7 +84,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       return { ...state, points }
     case "ADD_RULER":
       var rulers = [...state.rulers]
-      rulers.push(new RulerModel({ x: 75, y: 75 }, { x: 150, y: 150 }))
+      rulers.push(new RulerModel([{ x: 75, y: 75 }, { x: 150, y: 150 }]))
       return { ...state, rulers }
     case selectedAction:
       return {

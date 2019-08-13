@@ -9,35 +9,20 @@ import Ruler, { rulerActionCreators } from "./Ruler"
 import { noteActionCreators } from './Notes'
 
 const rulerDispatchProperties = index => dispatch => ({
-  setPosition1: (x, y) => {
-    dispatch(bindIndexToActionCreator(rulerActionCreators.setPosition, index)(0, x, y))
+  setPosition: (i, x, y) => {
+    dispatch(bindIndexToActionCreator(rulerActionCreators.setPosition, index)(i, x, y))
   },
-  setPosition2: (x, y) => {
-    dispatch(bindIndexToActionCreator(rulerActionCreators.setPosition, index)(1, x, y))
-  },
-  setNotesPosition1: (x, y) => {
+  setNotesPosition: (i, x, y) => {
     dispatch(
-      bindItemToNotesActionCreator(
+      {...bindItemToNotesActionCreator(
         noteActionCreators.setPosition,
-        "RULER-1",
+        "RULER",
         index
-      )(x, y)
+      )(x, y), rulerIndex: i}
     )
   },
-  setNotesPosition2: (x, y) => {
-    dispatch(
-      bindItemToNotesActionCreator(
-        noteActionCreators.setPosition,
-        "RULER-2",
-        index
-      )(x, y)
-    )
-  },
-  setNotesTethered1: tethered => {
-    dispatch(bindItemToNotesActionCreator(noteActionCreators.setTethered, "RULER-1", index)(tethered))
-  },
-  setNotesTethered2: tethered => {
-    dispatch(bindItemToNotesActionCreator(noteActionCreators.setTethered, "RULER-2", index)(tethered))
+  setNotesTethered: (i, tethered) => {
+    dispatch({...bindItemToNotesActionCreator(noteActionCreators.setTethered, "RULER", index)(tethered), rulerIndex: i})
   }
 })
 

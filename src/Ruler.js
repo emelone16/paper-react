@@ -11,41 +11,37 @@ export class RulerModel {
   static HITBOX_WIDTH = 30
 
   constructor(
-    position1,
-    position2,
-    notes1 = new NotesModel(
+    position,
+    notes = [new NotesModel(
       {
-        x: position1.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10,
-        y: position1.y
+        x: position[0].x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10,
+        y: position[0].y
       },
       "HI"
-    ),
-    notes2 = new NotesModel(
+    ), new NotesModel(
       {
-        x: position2.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10,
-        y: position2.y
+        x: position[1].x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10,
+        y: position[1].y
       },
       "HELLO"
-    ),
+    )],
     color = new ColorModel()
   ) {
-    this.position1 = position1
-    this.position2 = position2
-    this.notes1 = notes1
-    this.notes2 = notes2
+    this.position = position
+    this.notes = notes
     this.color = color
   }
 }
 
 export const rulerActions = {
-  SET_POSITION_1: "RULER/SET_POSITION_1",
-  SET_POSITION_2: "RULER/SET_POSITION_2",
+  SET_POSITION: "RULER/SET_POSITION",
 }
 
 export const rulerActionCreators = {
   setPosition: (i, x, y) => {
     return {
-      type: i === 0 ? rulerActions.SET_POSITION_1 : rulerActions.SET_POSITION_2,
+      type: rulerActions.SET_POSITION,
+      rulerIndex: i,
       x,
       y
     }
@@ -54,11 +50,8 @@ export const rulerActionCreators = {
 
 export default class Ruler extends Component {
   setupPoint = i => {
-    const { rulerModel, setPosition1, setPosition2, setNotesPosition1, setNotesPosition2} = this.props
-    const notesModel = i === 0 ? rulerModel.notes1 : rulerModel.notes2
-    const setPosition = i === 0 ? setPosition1 : setPosition2
-    const setNotesPosition = i === 0 ? setNotesPosition1 : setNotesPosition2
-    const point = i === 0 ? new paper.Point(rulerModel.position1.x, rulerModel.position1.y) : new paper.Point(rulerModel.position2.x, rulerModel.position2.y)
+    const { rulerModel, setPosition, setNotesPosition } = this.props
+    const point = new paper.Point(rulerModel.position[i].x, rulerModel.position[i].y)
 
     this.outer[i] = new paper.Path.Circle(point, RulerModel.CIRCLE_RADIUS / paper.view.zoom)
     this.outer[i].strokeColor = rulerModel.color.base
@@ -69,10 +62,10 @@ export default class Ruler extends Component {
     this.inner[i].fillColor = rulerModel.color.base
 
     this.outer[i].onMouseDrag = event => {
-      setPosition(this.outer[i].position.x + event.delta.x, this.outer[i].position.y + event.delta.y)
+      setPosition(i, this.outer[i].position.x + event.delta.x, this.outer[i].position.y + event.delta.y)
 
-      if (notesModel.tethered) {
-        setNotesPosition(this.outer[i].position.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10, this.outer[i].position.y)
+      if (rulerModel.notes[i].tethered) {
+        setNotesPosition(i, this.outer[i].position.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10, this.outer[i].position.y)
       } 
     }
 
@@ -81,10 +74,10 @@ export default class Ruler extends Component {
 
   setupLine = () => {
     const {
-      rulerModel, setPosition1, setPosition2, setNotesPosition1, setNotesPosition2
+      rulerModel, setPosition, setNotesPosition
     } = this.props
-    let point1 = new paper.Point(rulerModel.position1.x, rulerModel.position1.y)
-    let point2 = new paper.Point(rulerModel.position2.x, rulerModel.position2.y)
+    let point1 = new paper.Point(rulerModel.position[0].x, rulerModel.position[0].y)
+    let point2 = new paper.Point(rulerModel.position[1].x, rulerModel.position[1].y)
 
     this.line = new paper.Path.Line(point1, point2)
     this.line.strokeColor = rulerModel.color.base
@@ -96,20 +89,14 @@ export default class Ruler extends Component {
     this.hitbox.opacity = 0
 
     this.hitbox.onMouseDrag = event => {
-      setPosition1(this.outer[0].position.x + event.delta.x, this.outer[0].position.y + event.delta.y)
-      setPosition2(this.outer[1].position.x + event.delta.x, this.outer[1].position.y + event.delta.y)
+      for (var i = 0; i <= 1; i++) {
+        setPosition(i, this.outer[i].position.x + event.delta.x, this.outer[i].position.y + event.delta.y)
 
-      if (rulerModel.notes1.tethered) {
-        setNotesPosition1(this.outer[0].position.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom +
-          10, this.outer[0].position.y)
-      }
-
-      if (rulerModel.notes2.tethered) {
-        setNotesPosition2(this.outer[1].position.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom +
-          10, this.outer[1].position.y)
+        if (rulerModel.notes[i].tethered) {
+          setNotesPosition(i, this.outer[i].position.x + RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10, this.outer[i].position.y)
+        }
       }
     }
-
   }
 
   componentDidMount = () => {
@@ -122,45 +109,32 @@ export default class Ruler extends Component {
   }
 
   componentDidUpdate = () => {
-    const { rulerModel, selected } = this.props
-    let point1 = new paper.Point(rulerModel.position1.x, rulerModel.position1.y)
-    let point2 = new paper.Point(rulerModel.position2.x, rulerModel.position2.y)
+    const { rulerModel } = this.props
 
-    this.outer[0].position = point1
-    this.inner[0].position = point1
-    this.outer[1].position = point2
-    this.inner[1].position = point2
-
-    this.line.segments[0].point = point1
-    this.line.segments[1].point = point2
-
-    this.hitbox.segments[0].point = point1
-    this.hitbox.segments[1].point = point2
+    for (var i = 0; i <= 1; i++) {
+      let point = new paper.Point(rulerModel.position[i].x, rulerModel.position[i].y)
+      this.outer[i].position = point
+      this.inner[i].position = point
+      this.line.segments[i].point = point
+      this.hitbox.segments[i].point = point
+    }
   }
 
-  checkIntersectionAndSnap1 = text => {
-    const intersects = this.outer[0].intersects(text)
+  checkIntersectionAndSnap = i => text => {
+    const intersects = this.outer[i].intersects(text)
     if (!intersects) return null
-    return this.outer[0].position.add(
-      new paper.Point(RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10, 0)
-    )
-  }
-
-  checkIntersectionAndSnap2 = text => {
-    const intersects = this.outer[1].intersects(text)
-    if (!intersects) return null
-    return this.outer[1].position.add(
+    return this.outer[i].position.add(
       new paper.Point(RulerModel.CIRCLE_RADIUS / paper.view.zoom + 10, 0)
     )
   }
 
   render() {
-    const { setNotesPosition1, setNotesPosition2, setNotesTethered1, setNotesTethered2 } = this.props
+    const { setNotesPosition, setNotesTethered } = this.props
 
     return (
       <React.Fragment>
-        <Notes setNotesPosition={setNotesPosition1} setNotesTethered={setNotesTethered1} checkIntersectionAndSnap={this.checkIntersectionAndSnap1} notesModel={this.props.rulerModel.notes1} />
-        <Notes setNotesPosition={setNotesPosition2} setNotesTethered={setNotesTethered2} checkIntersectionAndSnap={this.checkIntersectionAndSnap2} notesModel={this.props.rulerModel.notes2} />
+        <Notes setNotesPosition={(x, y) => setNotesPosition(0, x, y)} setNotesTethered={tethered => setNotesTethered(0, tethered)} checkIntersectionAndSnap={this.checkIntersectionAndSnap(0)} notesModel={this.props.rulerModel.notes[0]} />
+        <Notes setNotesPosition={(x, y) => setNotesPosition(1, x, y)} setNotesTethered={tethered => setNotesTethered(1, tethered)} checkIntersectionAndSnap={this.checkIntersectionAndSnap(1)} notesModel={this.props.rulerModel.notes[1]} />
       </React.Fragment>
     )
   }
