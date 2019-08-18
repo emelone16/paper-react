@@ -13,6 +13,7 @@ class CanvasView extends Component {
 
   componentDidMount = () => {
     this.project = new paper.Project(this.canvas.current)
+    document.body.style.cursor = "default"
   }
 
   render() {

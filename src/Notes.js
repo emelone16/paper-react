@@ -1,5 +1,6 @@
 import React, { Component } from "react"
 import paper from "paper"
+import bindMouseChanges from "./mouse"
 
 export class NotesModel {
   constructor(position, text = "", showing = true, tethered = true) {
@@ -56,6 +57,8 @@ export default class Notes extends Component {
         )
       }
     }
+
+    bindMouseChanges(this.text)
   }
 
   componentDidMount = () => {

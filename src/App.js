@@ -7,11 +7,13 @@ import { noteActions } from "./Notes"
 import { selectedAction } from "./selected"
 import CanvasView from "./CanvasView"
 import { RulerModel, rulerActions } from "./Ruler"
+import { AngleArray } from "./Angle"
 
 let INITIAL_STATE = {
   selectedItem: null,
   points: [],
-  rulers: []
+  rulers: [],
+  angles: new AngleArray()
 }
 
 const bindToItemType = (state, type) => {
@@ -83,9 +85,12 @@ const reducer = (state = INITIAL_STATE, action) => {
       points.push(new PointModel(75, 75))
       return { ...state, points }
     case "ADD_RULER":
-      var rulers = [...state.rulers]
+      rulers = [...state.rulers]
       rulers.push(new RulerModel([{ x: 75, y: 75 }, { x: 150, y: 150 }]))
-      return { ...state, rulers }
+
+      state.angles.addLine()
+
+      return { ...state, rulers, angles: state.angles }
     case selectedAction:
       return {
         ...state,

@@ -2,7 +2,10 @@ import React, { Component } from "react"
 import paper from "paper"
 
 import Notes, { NotesModel } from "./Notes"
-import { ColorModel } from "./Color"
+import {
+  ColorModel
+} from "./Color"
+import bindMouseChanges from "./mouse"
 
 export class RulerModel {
   static CIRCLE_RADIUS = 25
@@ -53,13 +56,14 @@ export default class Ruler extends Component {
     const { rulerModel, setPosition, setNotesPosition } = this.props
     const point = new paper.Point(rulerModel.position[i].x, rulerModel.position[i].y)
 
+    
+    this.inner[i] = new paper.Path.Circle(point, RulerModel.INNER_CIRCLE_RADIUS / paper.view.zoom)
+    this.inner[i].fillColor = rulerModel.color.base
+    
     this.outer[i] = new paper.Path.Circle(point, RulerModel.CIRCLE_RADIUS / paper.view.zoom)
     this.outer[i].strokeColor = rulerModel.color.base
     this.outer[i].fillColor = rulerModel.color.unselected
     this.outer[i].opacity = 0
-
-    this.inner[i] = new paper.Path.Circle(point, RulerModel.INNER_CIRCLE_RADIUS / paper.view.zoom)
-    this.inner[i].fillColor = rulerModel.color.base
 
     this.outer[i].onMouseDrag = event => {
       setPosition(i, this.outer[i].position.x + event.delta.x, this.outer[i].position.y + event.delta.y)
@@ -70,6 +74,7 @@ export default class Ruler extends Component {
     }
 
     this.inner[i].onMouseDrag = this.outer[i].onMouseDrag
+    bindMouseChanges(this.outer[i])
   }
 
   setupLine = () => {
@@ -97,6 +102,8 @@ export default class Ruler extends Component {
         }
       }
     }
+
+    bindMouseChanges(this.hitbox)
   }
 
   componentDidMount = () => {

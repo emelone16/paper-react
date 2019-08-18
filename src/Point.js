@@ -3,6 +3,7 @@ import paper from "paper"
 
 import { ColorModel } from "./Color"
 import Notes, { NotesModel } from "./Notes"
+import bindMouseChanges from "./mouse"
 
 export class PointModel {
   static CIRCLE_RADIUS = 25
@@ -95,11 +96,13 @@ class Point extends Component {
 
     this.inner.onMouseDrag = this.outer.onMouseDrag
     this.inner.onMouseDown = this.outer.onMouseDown
+
+    bindMouseChanges(this.outer)
   }
 
   componentDidMount = () => {
-    this.setupOuterPoint()
     this.setupInnerPoint()
+    this.setupOuterPoint()
     this.setupActions()
   }
 
