@@ -4,6 +4,7 @@ import paper from "paper"
 
 import PointManager from "./PointManager"
 import RulerManager from "./RulerManager"
+import AngleManager from "./AngleManager"
 
 class CanvasView extends Component {
   constructor(props) {
@@ -22,6 +23,7 @@ class CanvasView extends Component {
         <canvas width={500} height={500} ref={this.canvas} />
         <PointManager />
         <RulerManager />
+        <AngleManager />
         <button
           onClick={() => {
             this.props.dispatch({ type: "ADD_POINT" })

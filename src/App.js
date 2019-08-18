@@ -7,13 +7,13 @@ import { noteActions } from "./Notes"
 import { selectedAction } from "./selected"
 import CanvasView from "./CanvasView"
 import { RulerModel, rulerActions } from "./Ruler"
-import { AngleArray } from "./Angle"
+import { AngleArrayUtility } from "./AngleArrayUtility"
 
 let INITIAL_STATE = {
   selectedItem: null,
   points: [],
   rulers: [],
-  angles: new AngleArray()
+  angles: []
 }
 
 const bindToItemType = (state, type) => {
@@ -57,7 +57,7 @@ const notesReducer = (state, action) => {
         items[action.index].notes[action.rulerIndex].tethered = action.tethered
         break
       }
-      
+
       items[action.index].notes.tethered = action.tethered
       break
     default:
@@ -78,8 +78,18 @@ const reducer = (state = INITIAL_STATE, action) => {
       return { ...state, points }
     case rulerActions.SET_POSITION:
       var rulers = [...state.rulers]
-      rulers[action.index].position[action.rulerIndex] = { x: action.x, y: action.y }
-      return { ...state, rulers}
+      rulers[action.index].position[action.rulerIndex] = {
+        x: action.x,
+        y: action.y
+      }
+
+      var angles = AngleArrayUtility.updateAngles(
+        state.angles,
+        action.index,
+        state.rulers
+      )
+
+      return { ...state, rulers, angles: angles }
     case "ADD_POINT":
       points = [...state.points]
       points.push(new PointModel(75, 75))
@@ -88,9 +98,12 @@ const reducer = (state = INITIAL_STATE, action) => {
       rulers = [...state.rulers]
       rulers.push(new RulerModel([{ x: 75, y: 75 }, { x: 150, y: 150 }]))
 
-      state.angles.addLine()
+      // var angleArray = new AngleArray(state.angles)
+      var angles = AngleArrayUtility.addLine(state.angles)
+      // angleArray.addLine()
+      // console.log(angleArray.angles)
 
-      return { ...state, rulers, angles: state.angles }
+      return { ...state, rulers, angles }
     case selectedAction:
       return {
         ...state,

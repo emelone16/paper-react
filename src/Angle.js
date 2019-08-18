@@ -1,45 +1,148 @@
-export class AngleArray {
+import React, { Component } from "react"
+import paper from "paper"
 
-  constructor(angles = []) {
-    this.angles = angles
-  }
+import { ColorModel } from "./Color"
 
-  addLine = () => {
-    this.angles.forEach(row => {
-      row.push(null)
-    })
+export class AngleModel {
+  static CIRCLE_RADIUS = 25
+  static INNER_CIRCLE_RADIUS = 4.25
+  static STROKE_WIDTH = 1
 
-    this.angles.push([null])
-  }
-
-  det = (a, b) => (a[0] * b[1]) - (a[1] * b[0])
-
-  addAngle = (i1, i2, line1, line2) => {
-    if (i1 >= i2) return
-
-    let xDiff = [line1[0].x - line1[1].x, line2[0].x - line2[1].x]
-    let yDiff = [line1[0].y - line1[1].y, line2[0].y - line2[1].y]
-    let div = this.det(xDiff, yDiff)
-    
-    if (div === 0) return
-
-    let d = [this.det([line1[0].x, line1[0].y], [line1[1].x, line1[1].y]), this.det([line2[0].x, line2[0].y], [line2[1].x, line2[1].y])]
-    let position = {
-      x: this.det(d, xDiff) / div,
-      y: this.det(d, yDiff) / div
-    }
-
-    let angle = new AngleModel(position)
-    this.angles[i1][i2] = angle
-  }
-}
-
-class AngleModel {
-
-  constructor(position, measurement = 0, active = false) {
+  constructor(
+    position,
+    measurement = 0,
+    complement = false,
+    active = false,
+    color = new ColorModel()
+  ) {
     this.position = position
     this.measurement = measurement
+    this.complement = complement
     this.active = active
+    this.color = color
+  }
+}
+
+class Angle extends Component {
+  extractArcPoints = () => {
+    let { angleModel, line1, line2 } = this.props
+    let intersection = new paper.Point(
+      angleModel.position.x,
+      angleModel.position.y
+    )
+
+    var points = []
+
+    points.push(new paper.Point(line1[0].x, line1[0].y))
+    points.push(new paper.Point(line2[0].x, line2[0].y))
+    points.push(new paper.Point(line1[1].x, line1[1].y))
+    points.push(new paper.Point(line2[1].x, line2[1].y))
+
+    points = points.map(point => point.subtract(intersection))
+
+    var arcs = []
+
+    for (var i = 0; i <= 3; i++) {
+      arcs.push(
+        new paper.Point(
+          points[i].x + points[(i + 1) % 4].x,
+          points[i].y + points[(i + 1) % 4].y
+        )
+      )
+    }
+
+    for (var i = 0; i <= 3; i++) {
+      points.splice(1 + 2 * i, 0, arcs[i])
+    }
+
+    points = points.map(point =>
+      point.normalize(AngleModel.CIRCLE_RADIUS / paper.view.zoom)
+    )
+
+    points = points.map(point => intersection.add(point))
+
+    return points
   }
 
+  drawInnerPoint = () => {
+    let { angleModel } = this.props
+    let point = new paper.Point(angleModel.position.x, angleModel.position.y)
+
+    if (!this.inner) {
+      this.inner = new paper.Path.Circle(
+        point,
+        AngleModel.INNER_CIRCLE_RADIUS / paper.view.zoom
+      )
+      this.inner.fillColor = angleModel.color.base
+    }
+
+    this.inner.position = point
+  }
+
+  drawWedges = () => {
+    let { angleModel } = this.props
+    let intersection = new paper.Point(
+      angleModel.position.x,
+      angleModel.position.y
+    )
+    var points = this.extractArcPoints()
+
+    try {
+      for (var i = 0; i <= 3; i++) {
+        if (this.wedges[i]) {
+          this.wedges[i].remove()
+        }
+
+        let arc = new paper.Path.Arc(
+          points[2 * i],
+          points[2 * i + 1],
+          points[(2 * i + 2) % 8]
+        )
+        arc.remove()
+
+        this.wedges[i] = new paper.Path([
+          intersection,
+          ...arc.segments,
+          intersection
+        ])
+        this.wedges[i].closed = true
+        this.wedges[i].strokeColor = angleModel.color.base
+        this.wedges[i].fillColor = angleModel.color.unselected
+      }
+    } catch (_) {
+      this.wedges.forEach(wedge => wedge.remove)
+      this.wedges = []
+    }
+
+    if (angleModel.complement) {
+      this.wedges[1].fillColor = angleModel.color.selected
+      this.wedges[3].fillColor = angleModel.color.selected
+    } else {
+      this.wedges[0].fillColor = angleModel.color.selected
+      this.wedges[2].fillColor = angleModel.color.selected
+    }
+  }
+
+  componentDidMount = () => {
+    this.wedges = []
+
+    this.drawInnerPoint()
+    this.drawWedges()
+  }
+
+  componentWillUnmount = () => {
+    this.inner.remove()
+    this.wedges.forEach(wedge => wedge.remove())
+  }
+
+  componentDidUpdate = () => {
+    this.drawInnerPoint()
+    this.drawWedges()
+  }
+
+  render() {
+    return <React.Fragment />
+  }
 }
+
+export default Angle
