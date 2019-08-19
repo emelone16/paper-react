@@ -8,6 +8,7 @@ import { selectedAction } from "./selected"
 import CanvasView from "./CanvasView"
 import { RulerModel, rulerActions } from "./Ruler"
 import { AngleArrayUtility } from "./AngleArrayUtility"
+import { angleActions } from "./Angle"
 
 let INITIAL_STATE = {
   selectedItem: null,
@@ -90,6 +91,10 @@ const reducer = (state = INITIAL_STATE, action) => {
       )
 
       return { ...state, rulers, angles: angles }
+    case angleActions.SET_COMPLEMENT:
+      var angles = [...state.angles]
+      angles[action.index.i][action.index.j].complement = action.complement
+      return { ...state, angles }
     case "ADD_POINT":
       points = [...state.points]
       points.push(new PointModel(75, 75))
@@ -97,11 +102,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case "ADD_RULER":
       rulers = [...state.rulers]
       rulers.push(new RulerModel([{ x: 75, y: 75 }, { x: 150, y: 150 }]))
-
-      // var angleArray = new AngleArray(state.angles)
       var angles = AngleArrayUtility.addLine(state.angles)
-      // angleArray.addLine()
-      // console.log(angleArray.angles)
 
       return { ...state, rulers, angles }
     case selectedAction:

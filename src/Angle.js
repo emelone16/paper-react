@@ -23,6 +23,19 @@ export class AngleModel {
   }
 }
 
+export const angleActions = {
+  SET_COMPLEMENT: "ANGLE/SET_COMPLEMENT"
+}
+
+export const angleActionCreators = {
+  setComplement: complement => {
+    return {
+      type: angleActions.SET_COMPLEMENT,
+      complement
+    }
+  }
+}
+
 class Angle extends Component {
   extractArcPoints = () => {
     let { angleModel, line1, line2 } = this.props
@@ -51,7 +64,7 @@ class Angle extends Component {
       )
     }
 
-    for (var i = 0; i <= 3; i++) {
+    for (i = 0; i <= 3; i++) {
       points.splice(1 + 2 * i, 0, arcs[i])
     }
 
@@ -80,7 +93,7 @@ class Angle extends Component {
   }
 
   drawWedges = () => {
-    let { angleModel } = this.props
+    let { angleModel, setComplement } = this.props
     let intersection = new paper.Point(
       angleModel.position.x,
       angleModel.position.y
@@ -121,6 +134,16 @@ class Angle extends Component {
       this.wedges[0].fillColor = angleModel.color.selected
       this.wedges[2].fillColor = angleModel.color.selected
     }
+
+    this.wedges.forEach((wedge, i) => {
+      wedge.onMouseDown = _ => {
+        if (i % 2 === 0) {
+          setComplement(false)
+        } else {
+          setComplement(true)
+        }
+      }
+    })
   }
 
   componentDidMount = () => {

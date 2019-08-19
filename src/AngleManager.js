@@ -1,8 +1,19 @@
 import React, { Component } from "react"
 import { connect } from "react-redux"
 
-import Angle from "./Angle"
+import Angle, { angleActionCreators } from "./Angle"
 import { AngleArrayUtility } from "./AngleArrayUtility"
+import { bindIndexToActionCreator } from "./actionCreatorUtilities"
+
+const angleDispatchProperties = index => dispatch => ({
+  setComplement: complement => {
+    dispatch(
+      bindIndexToActionCreator(angleActionCreators.setComplement, index)(
+        complement
+      )
+    )
+  }
+})
 
 class AngleManager extends Component {
   render() {
@@ -11,7 +22,14 @@ class AngleManager extends Component {
     return (
       <React.Fragment>
         {AngleArrayUtility.toList(angles, rulers).map(props => {
-          return <Angle {...props} />
+          return (
+            <Angle
+              {...props}
+              {...angleDispatchProperties({ i: props.i, j: props.j })(
+                this.props.dispatch
+              )}
+            />
+          )
         })}
       </React.Fragment>
     )

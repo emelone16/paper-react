@@ -42,7 +42,7 @@ export class AngleArrayUtility {
     return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB))
   }
 
-  static addAngle = (line1, line2) => {
+  static addAngle = (line1, line2, prevAngle) => {
     let xDiff = [line1[0].x - line1[1].x, line2[0].x - line2[1].x]
     let yDiff = [line1[0].y - line1[1].y, line2[0].y - line2[1].y]
     let div = this.det(xDiff, yDiff)
@@ -67,17 +67,30 @@ export class AngleArrayUtility {
 
     let angle = new AngleModel(position, measurement)
 
+    if (prevAngle) {
+      angle.complement = prevAngle.complement
+      angle.active = prevAngle.active
+    }
+
     return angle
   }
 
   static updateAngles = (angles, i, rulers) => {
     for (var j = 0; j < i; j++) {
-      angles[j][i] = this.addAngle(rulers[j].position, rulers[i].position)
+      angles[j][i] = this.addAngle(
+        rulers[j].position,
+        rulers[i].position,
+        angles[j][i]
+      )
     }
     let row = angles[i]
     row.forEach((angle, j) => {
       if (angle !== undefined) {
-        angles[i][j] = this.addAngle(rulers[i].position, rulers[j].position)
+        angles[i][j] = this.addAngle(
+          rulers[i].position,
+          rulers[j].position,
+          angles[i][j]
+        )
       }
     })
     return [...angles]
@@ -91,7 +104,9 @@ export class AngleArrayUtility {
           list.push({
             angleModel: angle,
             line1: rulers[i].position,
-            line2: rulers[j].position
+            line2: rulers[j].position,
+            i,
+            j
           })
         }
       })
